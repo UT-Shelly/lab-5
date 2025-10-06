@@ -256,10 +256,9 @@ public class MongoGradeDataBase implements GradeDataBase {
                 .build();
         final MediaType mediaType = MediaType.parse(APPLICATION_JSON);
         final JSONObject requestBody = new JSONObject();
-        final RequestBody body = RequestBody.create(mediaType, requestBody.toString());
         final Request request = new Request.Builder()
                 .url(String.format("%s/team", API_URL))
-                .method("GET", body)
+                .method("GET", null)
                 .addHeader(TOKEN, getAPIToken())
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .build();
@@ -275,13 +274,13 @@ public class MongoGradeDataBase implements GradeDataBase {
             //         then work on the details of how to parse it.
             if (responseBody.getInt(STATUS_CODE) == SUCCESS_CODE) {
 
-                JSONArray step1 =  responseBody.getJSONArray("team");
-                JSONArray step2 = step1.getJSONArray(1);
+                JSONObject step1 =  responseBody.getJSONObject("team");
+                JSONArray step2 = step1.getJSONArray("members");
                 String[] members = new String[step2.length()];
                 for (int i = 0; i < step2.length(); i++) {
                     members[i] = step2.getString(i);
                 }
-                Team t = new Team(responseBody.getString("name"), members);
+                Team t = new Team(step1.getString("name"), members);
                 return t;
 
             } else {
