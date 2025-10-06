@@ -254,20 +254,41 @@ public class MongoGradeDataBase implements GradeDataBase {
     public Team getMyTeam() {
         final OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
+        final MediaType mediaType = MediaType.parse(APPLICATION_JSON);
+        final JSONObject requestBody = new JSONObject();
+        final RequestBody body = RequestBody.create(mediaType, requestBody.toString());
         final Request request = new Request.Builder()
                 .url(String.format("%s/team", API_URL))
-                .method("GET", null)
+                .method("GET", body)
                 .addHeader(TOKEN, getAPIToken())
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .build();
 
-        final Response response;
-        final JSONObject responseBody;
+        try {
 
-        // TODO Task 3b: Implement the logic to get the team information
-        // HINT 1: Look at the formTeam method to get an idea on how to parse the response
-        // HINT 2: You may find it useful to just initially print the contents of the JSON
-        //         then work on the details of how to parse it.
-        return null;
+            final Response response = client.newCall(request).execute();
+            final JSONObject responseBody = new JSONObject(response.body().string());
+
+            // TODO Task 3b: Implement the logic to get the team information
+            // HINT 1: Look at the formTeam method to get an idea on how to parse the response
+            // HINT 2: You may find it useful to just initially print the contents of the JSON
+            //         then work on the details of how to parse it.
+            if (responseBody.getInt(STATUS_CODE) == SUCCESS_CODE) {
+
+                JSONArray step1 =  responseBody.getJSONArray("team");
+                JSONArray step2 = step1.getJSONArray(1);
+                String[] members = new String[step2.length()];
+                for (int i = 0; i < step2.length(); i++) {
+                    members[i] = step2.getString(i);
+                }
+                Team t = new Team(responseBody.getString("name"), members);
+                return t;
+
+            } else {
+                throw new RuntimeException(responseBody.getString(MESSAGE));
+            }
+        } catch (IOException | JSONException event) {
+            throw new RuntimeException(event);
+        }
     }
 }
